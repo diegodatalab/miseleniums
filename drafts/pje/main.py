@@ -3,6 +3,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.select import Select
 from time import sleep
+import openpyxl
 
 
 url = "https://pje-consulta.tjce.jus.br/pje1grau/ConsultaPublica/listView.seam"
@@ -31,6 +32,7 @@ processos = driver.find_elements(By.XPATH, "//b[@class='btn-block']")
 
 for processo in processos:
     processo.click()
+    sleep(10)
     janelas = driver.window_handles     # ! verifica quais janelas estão disponíveis
     driver.switch_to.window(janelas[-1])
     driver.set_window_size(1920, 1080)
@@ -48,3 +50,34 @@ for processo in processos:
     for movimentacao in movimentacoes:
         lista_movimentacoes.append(movimentacao.text)
     
+    workbook = openpyxl.load_workbook('/home/diego/Desktop/miseleniums/drafts/pje/dados.xlsx')
+    try:
+        pagina_processo = workbook[numero_processo]
+        pagina_processo['A1'].value = "Número do Processo"
+        pagina_processo['B1'].value = "Data da Distribuição"
+        pagina_processo['C1'].value = "Movimentações"
+        pagina_processo['A2'].value = numero_processo
+        pagina_processo['B2'].value = data_distribuicao
+        for index, linha in enumerate(pagina_processo.iter_rows(min_row=2, max_rol=len(lista_movimentacoes), min_col=3, max_col=3)):
+            for celula in linha:
+                celula.value = lista_movimentacoes[index]
+        workbook.save('/home/diego/Desktop/miseleniums/drafts/pje/dados.xlsx')
+        driver.close()
+        driver.switch_to.window(driver.window_handles[0])
+            
+
+    except Exception as error:
+        workbook.create_chartsheet(numero_processo)
+        pagina_processo = workbook[numero_processo]
+        pagina_processo['A1'].value = "Número do Processo"
+        pagina_processo['B1'].value = "Data da Distribuição"
+        pagina_processo['C1'].value = "Movimentações"
+        pagina_processo['A2'].value = numero_processo
+        pagina_processo['B2'].value = data_distribuicao
+        for index, linha in enumerate(pagina_processo.iter_rows(min_row=2, max_rol=len(lista_movimentacoes), min_col=3, max_col=3)):
+            for celula in linha:
+                celula.value = lista_movimentacoes[index]
+        workbook.save('/home/diego/Desktop/miseleniums/drafts/pje/dados.xlsx')
+        driver.close()
+        sleep(3)
+        driver.switch_to.window(driver.window_handles[0])
